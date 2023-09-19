@@ -7,6 +7,7 @@ class Workout {
   date = new Date();
   id = (Date.now() + '').slice(-10);
   clicks = 0
+  marker
 
   constructor(coords, distance, duration) {
     this.coords = coords; // [lat, lng]
@@ -80,6 +81,7 @@ class App {
   #mapZoomLevel = 13;
   #mapEvent;
   #workouts = [];
+  #markers = [];
 
   constructor() {
     // Get user's position
@@ -116,6 +118,11 @@ class App {
       center: [latitude, longitude],
       zoom: this.#mapZoomLevel,
     });
+
+    if (this.#markers.length > 0)
+      this.#map.fitBounds(
+        new L.featureGroup(this.#markers).getBounds().pad(0.5)
+      );
 
     // TILES
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -155,7 +162,7 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
-  // CREATE NEW WORKOUT
+  // CREATE NEW WORKOUT AFTER ENTERING
   _newWorkout(e) {
     const validInputs = (...inputs) =>
       inputs.every(input => Number.isFinite(input));
@@ -223,7 +230,7 @@ class App {
   }
 
   _renderWorkoutMarker(workout) {
-    L.marker(workout.coords)
+    const marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -303,15 +310,27 @@ class App {
 
   _setLocalStorage() {
     localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+    // localStorage.setItem('markers', JSON.stringify(this.#markers));
   }
 
   // Gets executed when App constructor is called
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
+    const markers = JSON.parse(localStorage.getItem('markers'));
 
     if (!data) return;
+    if (!markers) this.#markers = [];
+    else this.#markers = markers;
 
+    // Transferring data from local storage to workouts array
     this.#workouts = data;
+
+    // Push markers to 'markers' array so I can adjust map to view all markers when map loads.
+    this.#workouts.forEach(workout =>
+      this.#markers.push(L.marker(workout.coords))
+    );
+
+    // Rendering each workout after transferring of data
     this.#workouts.forEach(workout => {
       this._renderWorkout(workout);
     });
@@ -324,5 +343,3 @@ class App {
 }
 
 const app = new App();
-
-// Intl.DateTimeFormat('en-US', {month: 'long', day: 'numeric'}).format(new Date())

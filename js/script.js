@@ -121,7 +121,7 @@ class App {
 
     if (this.#markers.length > 0)
       this.#map.fitBounds(
-        new L.featureGroup(this.#markers).getBounds().pad(0.5)
+        new L.featureGroup(this.#markers).getBounds().pad(0.3)
       );
 
     // TILES
@@ -272,8 +272,7 @@ class App {
           <span class="workout__icon">🦶🏼</span>
           <span class="workout__value">${workout.cadence}</span>
           <span class="workout__unit">spm</span>
-        </div>
-      </li>`;
+        </div>`;
     }
 
     if (workout.type === 'cycling') {
@@ -288,8 +287,11 @@ class App {
           <span class="workout__value">${workout.elevationGain}</span>
           <span class="workout__unit">m</span>
         </div>
-      </li>`;
+      `;
     }
+
+    html += `<h3>Location</h3>
+            </li>`;
     form.insertAdjacentHTML('afterend', html);
   }
 

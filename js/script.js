@@ -219,8 +219,8 @@ class App {
     // RENDER WORKOUT AS A MARKER ON MAP
     this._renderWorkoutMarker(workout);
 
-    // Render workout on list
-    this._renderWorkout(workout);
+    // Render workout on list and get location
+    this._setLocation(workout);
 
     // Hide form and clear input fields
     this._hideForm();
@@ -245,7 +245,19 @@ class App {
       .openPopup();
   }
 
-  _renderWorkout(workout) {
+  _setLocation(workout) {
+    fetch(
+      `https://geocode.xyz/${workout.coords[0]},${workout.coords[1]}?geoit=json&auth=948729939140222920015x16165`
+    )
+      .then(res => {
+        if (!res.ok) throw new Error('N/A');
+        return res.json();
+      })
+      .then(data => this._renderWorkout(workout, data))
+      .catch(err => this._renderWorkout(workout, err));
+  }
+
+  _renderWorkout(workout, res) {
     let html = `
       <li class="workout workout--${workout.type}" data-id="${workout.id}">
         <h2 class="workout__title"> ${workout.description}</h2>
@@ -290,7 +302,11 @@ class App {
       `;
     }
 
-    html += `<h3>Location</h3>
+    html += `<h3 class="workout__location">${
+      !res?.city
+        ? 'Location not available.'
+        : `${res.city}${res?.state ? `, ${res.state}` : ''}`
+    }</h3>
             </li>`;
     form.insertAdjacentHTML('afterend', html);
   }
@@ -334,7 +350,7 @@ class App {
 
     // Rendering each workout after transferring of data
     this.#workouts.forEach(workout => {
-      this._renderWorkout(workout);
+      this._setLocation(workout);
     });
   }
 
